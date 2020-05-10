@@ -1,4 +1,5 @@
 import csv
+from tkinter import *
 
 
 def is_valid_option(option):
@@ -37,43 +38,71 @@ def is_exist_id(emps_dict, emp_id):
     return False
 
 
-def is_valid_add_file(file_name, emps_dict):
+def is_valid_add_file(file_name, emps_dict, top):
+    # Create invalid message labels
+    invalid_fields_label = Label(top, text="The file contains invalid fields!", fg="red")
+    invalid_dup_label = Label(top, text="Error! One of the IDs is already exist!", fg="red")
+    invalid_file_name_label = Label(top, text="No such file!", fg="red")
+
     try:
         with open(file_name, "r") as file:
             fieldnames = ["id", "name", "age", "phone"]
             csv_reader = csv.DictReader(file, fieldnames=fieldnames)
+
             for line in csv_reader:
                 if not (len(line) == 4 and is_valid_id(line["id"]) and is_valid_name(line["name"]) and is_valid_age(line["age"]) and is_valid_phone(line["phone"])):
-                    print("Invalid file!\n")
+                    invalid_fields_label.grid(row=0, column=2, sticky="W")
                     return False
-                
+                else:
+                    invalid_fields_label.grid_remove()
+
                 if line["id"] in emps_dict:
-                    print("Error! One of the IDs is already exist!\n")
+                    invalid_dup_label.grid(row=0, column=2, sticky="W")
                     return False
+                else:
+                    invalid_dup_label.grid_remove()
         return True
+
     except FileNotFoundError:
-        print("No such file!\n")
+        invalid_file_name_label.grid(row=0, column=2, sticky="W")
         return False
 
 
-def is_valid_delete_file(file_name, emps_dict):
+def is_valid_delete_file(file_name, emps_dict, top):
+    # Create invalid message labels
+    invalid_fields_label = Label(top, text="The file contains invalid fields!", fg="red")
+    missing_data_label = Label(top, text="Not all the data of all the employees to delete is supplied!", fg="red")
+    not_exist_label = Label(top, text="Some of the employees to delete do not exist in the system!", fg="red")
+    invalid_file_name_label = Label(top, text="No such file!", fg="red")
+
     try:
         with open(file_name, "r") as file:
             fieldnames = ["id", "name", "age", "phone"]
             csv_reader = csv.DictReader(file, fieldnames=fieldnames)
+
             for line in csv_reader:
                 if not (len(line) == 4 and is_valid_id(line["id"]) and is_valid_name(line["name"]) and is_valid_age(line["age"]) and is_valid_phone(line["phone"])):
-                    print("Invalid file!\n")
+                    invalid_fields_label.grid(row=0, column=2, sticky="W")
                     return False
+
                 found = False
+                correct_data = False
                 for key, emp in emps_dict.items():
-                    if emp.emp_id == line["id"] and emp.name == line["name"] and emp.age == line["age"] and emp.phone == line["phone"]:
+                    if emp.emp_id == line["id"]:
                         found = True
-                        break
+                        if emp.name == line["name"] and emp.age == line["age"] and emp.phone == line["phone"]:
+                            correct_data = True
+                            break
+
+                if found and not correct_data:
+                    missing_data_label.grid(row=0, column=2, sticky="W")
+                    return False
+
                 if not found:
-                    print("Not all the data of the employees to delete is supplied!")
+                    not_exist_label.grid(row=0, column=2, sticky="W")
                     return False
         return True
+
     except FileNotFoundError:
-        print("No such file!\n")
+        invalid_file_name_label.grid(row=0, column=2, sticky="W")
         return False
